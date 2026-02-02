@@ -25,14 +25,16 @@ This Ludus range provides a complete CCDC (Collegiate Cyber Defense Competition)
 │                    Management Network (VLAN 99)              │
 │  10.{range_id}.99.0/24                                      │
 │                                                              │
-│  ┌──────────┐         ┌──────────────┐                      │
-│  │  Router  │         │   Scoring    │                      │
-│  │ (.99.1)  │         │   Engine     │                      │
-│  └─────┬────┘         │  (.99.10)    │                      │
-│        │              └──────────────┘                       │
-└────────┼──────────────────────────────────────────────────────┘
+│  ┌──────────────┐         ┌──────────┐                      │
+│  │   Scoring    │         │   Kali   │                      │
+│  │   Engine     │         │ Red Team │                      │
+│  │  (.99.10)    │         │ (.99.50) │                      │
+│  └──────────────┘         └──────────┘                      │
+│                                                              │
+│  Note: Ludus automatically routes between VLANs             │
+└────────┼─────────────────────────────────────────────────────┘
          │
-         │ Firewall/NAT
+         │ Automatic Routing
          │
 ┌────────┼──────────────────────────────────────────────────────┐
 │        │            Business Network (VLAN 10)                │
@@ -72,6 +74,7 @@ This Ludus range provides a complete CCDC (Collegiate Cyber Defense Competition)
 - **Location**: Management network (isolated from business network)
 - **Access**: `http://10.{range_id}.99.10`
 - **Credentials**: admin / changeme (change after first login!)
+- **Note**: Ludus automatically handles routing between VLANs
 
 ### Domain Controller (DC01)
 - **IP**: `10.{range_id}.10.2`
@@ -164,9 +167,10 @@ Before deploying this range, ensure you have:
    - Follow: https://docs.ludus.cloud/docs/quick-start/using-cli-locally
 
 5. **Hardware Requirements**:
-   - **Minimum**: 68GB RAM, 18 CPU cores, 420GB disk (with Kali)
+   - **Minimum**: 67GB RAM, 17 CPU cores, 400GB disk
    - **Recommended**: 96GB RAM, 24 CPU cores, 500GB disk
-   - **Without Mail Server**: 52GB RAM, 14 CPU cores, 320GB disk
+   - **Without Mail Server**: 51GB RAM, 13 CPU cores, 300GB disk
+   - Note: Ludus handles routing automatically, no separate router VM needed
 
 ## Installation
 
@@ -231,11 +235,10 @@ ludus range errors
 
 After deployment completes:
 
-1. **Shut down all VMs**
+1. **Shut down all VMs** (if needed for cleanup)
 2. **Power on in order**:
-   - Router first
-   - DC01 second
-   - All other VMs third
+   - DC01 first (Domain Controller needs to be ready)
+   - All other VMs second
 
 3. **Access Scoring Engine**:
    - Navigate to `http://10.{range_id}.99.10`

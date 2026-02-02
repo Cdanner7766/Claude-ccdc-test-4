@@ -85,9 +85,10 @@
 ### Management Network (VLAN 99)
 | Device | IP Address | Purpose |
 |--------|-----------|----------|
-| Router | 10.X.99.1 | Gateway and routing |
 | Scoring Engine | 10.X.99.10 | Service monitoring |
 | Kali Linux | 10.X.99.50 | Red Team attacker machine |
+
+Note: Ludus automatically provides routing between VLANs - no dedicated router VM needed.
 
 ### Business Network (VLAN 10)
 | Device | IP Address | Services | Points |
@@ -283,13 +284,15 @@ All Windows systems depend on DC01 for:
 ## Resource Requirements
 
 ### Minimum Configuration
-- **Total RAM**: 64GB
-- **Total CPU**: 16 cores
+- **Total RAM**: 67GB (without router overhead)
+- **Total CPU**: 17 cores
 - **Total Disk**: 400GB
 
 ### Per-VM Allocation
 | VM | RAM | CPU | Disk | Priority |
 |----|-----|-----|------|----------|
+| Scoring | 4GB | 2 | 20GB | Critical |
+| Kali | 4GB | 2 | 40GB | High |
 | DC01 | 4GB | 2 | 60GB | Critical |
 | FS01 | 4GB | 2 | 100GB | High |
 | WEB01 | 4GB | 2 | 60GB | Critical |
@@ -300,8 +303,8 @@ All Windows systems depend on DC01 for:
 | FTP01 | 2GB | 1 | 40GB | Low |
 | WS01 | 4GB | 2 | 60GB | Low |
 | WS02 | 4GB | 2 | 60GB | Low |
-| Scoring | 4GB | 2 | 20GB | Critical |
-| Router | 1GB | 1 | 10GB | Critical |
+
+**Total without router**: 11 VMs
 
 ### Resource Optimization
 To run on limited hardware:

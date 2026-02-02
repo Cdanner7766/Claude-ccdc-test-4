@@ -3,18 +3,8 @@ ludus:
   # Whatcom Community College CCDC Practice Range
   # Simulates a small business environment for defensive security training
   
-  - vm_name: "{{ range_id }}-router"
-    hostname: "{{ range_id }}-rtr"
-    template: debian-12-x64-server-template
-    vlan: 99
-    ip_last_octet: 1
-    ram_gb: 1
-    cpus: 1
-    linux: true
-    router: true
-    testing:
-      snapshot: false
-      block_internet: false
+  # Note: Ludus automatically provides routing between VLANs
+  # No separate router VM needed
 
   # ==========================================
   # SCORING ENGINE (Outside Business Network)
@@ -42,7 +32,6 @@ ludus:
     cpus: 2
     windows:
       install_additional_tools: true
-      timezone: "Pacific Standard Time"
     domain:
       fqdn: wcc.local
       role: primary-dc

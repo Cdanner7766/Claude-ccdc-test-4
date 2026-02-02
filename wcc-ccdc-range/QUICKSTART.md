@@ -79,13 +79,7 @@ ludus range power off
 # Wait 30 seconds
 sleep 30
 
-# Power on router first
-ludus range power on --vm-name "*-router"
-
-# Wait 60 seconds
-sleep 60
-
-# Power on DC second
+# Power on DC first (it's critical for domain services)
 ludus range power on --vm-name "*-dc01"
 
 # Wait 120 seconds (let AD fully start)
