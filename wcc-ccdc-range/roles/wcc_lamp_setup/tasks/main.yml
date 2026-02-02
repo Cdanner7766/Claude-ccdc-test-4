@@ -1,0 +1,100 @@
+---
+# Install and configure LAMP stack (Linux, Apache, MySQL, PHP)
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install Apache
+  apt:
+    name:
+      - apache2
+      - apache2-utils
+    state: present
+
+- name: Install MySQL
+  apt:
+    name:
+      - mysql-server
+      - mysql-client
+      - python3-mysqldb
+    state: present
+
+- name: Install PHP
+  apt:
+    name:
+      - php
+      - php-mysql
+      - php-cli
+      - php-common
+      - php-curl
+      - php-gd
+      - php-json
+      - php-mbstring
+      - php-xml
+      - libapache2-mod-php
+    state: present
+
+- name: Start and enable Apache
+  systemd:
+    name: apache2
+    state: started
+    enabled: yes
+
+- name: Start and enable MySQL
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password (INTENTIONALLY WEAK FOR CCDC PRACTICE)
+  mysql_user:
+    name: root
+    host: localhost
+    password: "ChangeMe123!"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  ignore_errors: yes
+
+- name: Create sample database
+  mysql_db:
+    name: wcc_store
+    state: present
+    login_user: root
+    login_password: "ChangeMe123!"
+  ignore_errors: yes
+
+- name: Deploy sample PHP website
+  copy:
+    content: |
+      <?php
+      echo "<h1>WCC LAMP Server</h1>";
+      echo "<p>Server: " . $_SERVER['SERVER_NAME'] . "</p>";
+      echo "<p>PHP Version: " . phpversion() . "</p>";
+      
+      // Database connection test
+      $conn = new mysqli("localhost", "root", "ChangeMe123!", "wcc_store");
+      if ($conn->connect_error) {
+          echo "<p style='color: red;'>Database connection failed</p>";
+      } else {
+          echo "<p style='color: green;'>Database connection successful</p>";
+      }
+      ?>
+    dest: /var/www/html/index.php
+    mode: '0644'
+
+- name: Enable Apache modules
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - rewrite
+    - headers
+  notify: restart apache2
+
+- name: Configure Apache (INTENTIONALLY PERMISSIVE FOR PRACTICE)
+  lineinfile:
+    path: /etc/apache2/apache2.conf
+    line: "ServerTokens Prod"
+    state: present
+  notify: restart apache2

@@ -1,0 +1,74 @@
+---
+# Configure IIS with e-commerce website
+
+- name: Install IIS with required features
+  win_feature:
+    name:
+      - Web-Server
+      - Web-WebServer
+      - Web-Common-Http
+      - Web-Default-Doc
+      - Web-Dir-Browsing
+      - Web-Http-Errors
+      - Web-Static-Content
+      - Web-Http-Redirect
+      - Web-Health
+      - Web-Http-Logging
+      - Web-Performance
+      - Web-Stat-Compression
+      - Web-Security
+      - Web-Filtering
+      - Web-Basic-Auth
+      - Web-Windows-Auth
+      - Web-App-Dev
+      - Web-Net-Ext45
+      - Web-Asp-Net45
+      - Web-ISAPI-Ext
+      - Web-ISAPI-Filter
+      - Web-Mgmt-Tools
+      - Web-Mgmt-Console
+    state: present
+    include_management_tools: yes
+
+- name: Create website root directory
+  win_file:
+    path: C:\inetpub\wwwroot\store
+    state: directory
+
+- name: Deploy sample e-commerce site
+  win_copy:
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>WCC Store - Welcome</title>
+      </head>
+      <body>
+          <h1>Welcome to WCC Community Store</h1>
+          <p>This is a sample e-commerce website.</p>
+          <p>Products:</p>
+          <ul>
+              <li>Product 1 - $10.00</li>
+              <li>Product 2 - $20.00</li>
+              <li>Product 3 - $30.00</li>
+          </ul>
+      </body>
+      </html>
+    dest: C:\inetpub\wwwroot\index.html
+
+- name: Configure IIS site bindings
+  win_iis_website:
+    name: "Default Web Site"
+    state: started
+    port: 80
+    ip: "*"
+    application_pool: DefaultAppPool
+
+- name: Create SSL binding (self-signed for now)
+  win_shell: |
+    New-SelfSignedCertificate -DnsName "wcc.local" -CertStoreLocation "cert:\LocalMachine\My"
+    $cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object {$_.Subject -match "wcc.local"} | Select-Object -First 1
+    New-WebBinding -Name "Default Web Site" -Protocol https -Port 443
+    $binding = Get-WebBinding -Name "Default Web Site" -Protocol https
+    $binding.AddSslCertificate($cert.Thumbprint, "my")
+  ignore_errors: yes

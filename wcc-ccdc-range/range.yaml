@@ -1,0 +1,219 @@
+---
+ludus:
+  # Whatcom Community College CCDC Practice Range
+  # Simulates a small business environment for defensive security training
+  
+  - vm_name: "{{ range_id }}-router"
+    hostname: "{{ range_id }}-rtr"
+    template: debian-12-x64-server-template
+    vlan: 99
+    ip_last_octet: 1
+    ram_gb: 1
+    cpus: 1
+    linux: true
+    router: true
+    testing:
+      snapshot: false
+      block_internet: false
+
+  # ==========================================
+  # SCORING ENGINE (Outside Business Network)
+  # ==========================================
+  - vm_name: "{{ range_id }}-scoring"
+    hostname: "{{ range_id }}-scoring"
+    template: debian-12-x64-server-template
+    vlan: 99  # Management network - isolated from business network
+    ip_last_octet: 10
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    roles:
+      - wcc_scoring_engine
+
+  # ==========================================
+  # DOMAIN CONTROLLER / AD INFRASTRUCTURE
+  # ==========================================
+  - vm_name: "{{ range_id }}-dc01"
+    hostname: "{{ range_id }}-dc01"
+    template: win2022-server-x64-template
+    vlan: 10
+    ip_last_octet: 2
+    ram_gb: 4
+    cpus: 2
+    windows:
+      install_additional_tools: true
+      timezone: "Pacific Standard Time"
+    domain:
+      fqdn: wcc.local
+      role: primary-dc
+    roles:
+      - wcc_sysmon_install
+      - wcc_ad_vulnerable_setup
+
+  # ==========================================
+  # FILE SERVER
+  # ==========================================
+  - vm_name: "{{ range_id }}-fs01"
+    hostname: "{{ range_id }}-fs01"
+    template: win2022-server-x64-template
+    vlan: 10
+    ip_last_octet: 3
+    ram_gb: 4
+    cpus: 2
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+      - wcc_fileserver_setup
+
+  # ==========================================
+  # WEB SERVER (IIS with E-commerce)
+  # ==========================================
+  - vm_name: "{{ range_id }}-web01"
+    hostname: "{{ range_id }}-web01"
+    template: win2022-server-x64-template
+    vlan: 10
+    ip_last_octet: 4
+    ram_gb: 4
+    cpus: 2
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+      - wcc_iis_ecommerce_setup
+
+  # ==========================================
+  # MAIL SERVER (Microsoft Exchange)
+  # ==========================================
+  - vm_name: "{{ range_id }}-mail01"
+    hostname: "{{ range_id }}-mail01"
+    template: win2022-server-x64-template
+    vlan: 10
+    ip_last_octet: 5
+    ram_gb: 8
+    cpus: 4
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+      - wcc_exchange_setup
+
+  # ==========================================
+  # DATABASE SERVER (SQL Server)
+  # ==========================================
+  - vm_name: "{{ range_id }}-db01"
+    hostname: "{{ range_id }}-db01"
+    template: win2022-server-x64-template
+    vlan: 10
+    ip_last_octet: 6
+    ram_gb: 6
+    cpus: 2
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+      - wcc_sqlserver_setup
+
+  # ==========================================
+  # DNS/DHCP SERVER (Linux-based)
+  # ==========================================
+  - vm_name: "{{ range_id }}-dns01"
+    hostname: "{{ range_id }}-dns01"
+    template: debian-11-x64-server-template
+    vlan: 10
+    ip_last_octet: 7
+    ram_gb: 2
+    cpus: 1
+    linux: true
+    roles:
+      - wcc_bind_dhcp_setup
+      - wcc_linux_logging
+
+  # ==========================================
+  # LINUX WEB SERVER (Apache/PHP/MySQL)
+  # ==========================================
+  - vm_name: "{{ range_id }}-lamp01"
+    hostname: "{{ range_id }}-lamp01"
+    template: debian-11-x64-server-template
+    vlan: 10
+    ip_last_octet: 8
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    roles:
+      - wcc_lamp_setup
+      - wcc_linux_logging
+
+  # ==========================================
+  # FTP SERVER
+  # ==========================================
+  - vm_name: "{{ range_id }}-ftp01"
+    hostname: "{{ range_id }}-ftp01"
+    template: debian-11-x64-server-template
+    vlan: 10
+    ip_last_octet: 9
+    ram_gb: 2
+    cpus: 1
+    linux: true
+    roles:
+      - wcc_vsftpd_setup
+      - wcc_linux_logging
+
+  # ==========================================
+  # CLIENT WORKSTATIONS
+  # ==========================================
+  - vm_name: "{{ range_id }}-ws01"
+    hostname: "{{ range_id }}-ws01"
+    template: win11-22h2-x64-enterprise-template
+    vlan: 10
+    ip_last_octet: 20
+    ram_gb: 4
+    cpus: 2
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+
+  - vm_name: "{{ range_id }}-ws02"
+    hostname: "{{ range_id }}-ws02"
+    template: win11-22h2-x64-enterprise-template
+    vlan: 10
+    ip_last_octet: 21
+    ram_gb: 4
+    cpus: 2
+    windows:
+      install_additional_tools: true
+    domain:
+      fqdn: wcc.local
+      role: member
+    roles:
+      - wcc_sysmon_install
+
+  # ==========================================
+  # ATTACKER/RED TEAM MACHINE (Kali)
+  # ==========================================
+  # Note: This would need a Kali template built
+  # Commented out for now, can be deployed separately
+  # - vm_name: "{{ range_id }}-kali"
+  #   hostname: "{{ range_id }}-kali"
+  #   template: kali-2024-x64-template
+  #   vlan: 99  # On management network to simulate external attacker
+  #   ip_last_octet: 50
+  #   ram_gb: 4
+  #   cpus: 2
+  #   linux: true

@@ -1,0 +1,130 @@
+---
+# WCC CCDC Scoring Engine Installation
+# Based on scoringengine/scoringengine from GitHub
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install dependencies
+  apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+      - git
+      - redis-server
+      - nginx
+      - supervisor
+    state: present
+
+- name: Create scoring engine user
+  user:
+    name: scoring
+    system: yes
+    shell: /bin/bash
+    home: /opt/scoringengine
+
+- name: Clone scoring engine repository
+  git:
+    repo: 'https://github.com/scoringengine/scoringengine.git'
+    dest: /opt/scoringengine
+    version: master
+  become_user: scoring
+
+- name: Create Python virtual environment
+  command: python3 -m venv /opt/scoringengine/venv
+  args:
+    creates: /opt/scoringengine/venv
+  become_user: scoring
+
+- name: Install Python dependencies
+  pip:
+    requirements: /opt/scoringengine/requirements.txt
+    virtualenv: /opt/scoringengine/venv
+  become_user: scoring
+
+- name: Create scoring engine configuration
+  template:
+    src: scoring.conf.j2
+    dest: /opt/scoringengine/scoring.conf
+    owner: scoring
+    group: scoring
+    mode: '0644'
+
+- name: Initialize database
+  shell: |
+    source /opt/scoringengine/venv/bin/activate
+    python3 /opt/scoringengine/bin/setup_db.py
+  args:
+    executable: /bin/bash
+    creates: /opt/scoringengine/scoring.db
+  become_user: scoring
+
+- name: Load sample CCDC configuration
+  template:
+    src: ccdc_config.yaml.j2
+    dest: /opt/scoringengine/ccdc_config.yaml
+    owner: scoring
+    group: scoring
+    mode: '0644'
+
+- name: Configure supervisor for scoring engine
+  template:
+    src: supervisor_scoring.conf.j2
+    dest: /etc/supervisor/conf.d/scoringengine.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart supervisor
+
+- name: Configure nginx for scoring dashboard
+  template:
+    src: nginx_scoring.conf.j2
+    dest: /etc/nginx/sites-available/scoringengine
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable nginx site
+  file:
+    src: /etc/nginx/sites-available/scoringengine
+    dest: /etc/nginx/sites-enabled/scoringengine
+    state: link
+  notify: restart nginx
+
+- name: Remove default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
+
+- name: Start and enable redis
+  systemd:
+    name: redis-server
+    state: started
+    enabled: yes
+
+- name: Start and enable supervisor
+  systemd:
+    name: supervisor
+    state: started
+    enabled: yes
+
+- name: Create scoring engine startup script
+  template:
+    src: start_scoring.sh.j2
+    dest: /opt/scoringengine/start_scoring.sh
+    owner: scoring
+    group: scoring
+    mode: '0755'
+
+- name: Display scoring engine information
+  debug:
+    msg:
+      - "Scoring Engine installed successfully!"
+      - "Access the dashboard at: http://{{ ansible_default_ipv4.address }}"
+      - "Default admin credentials: admin / changeme"
+      - "Configuration file: /opt/scoringengine/ccdc_config.yaml"
+      - "To start scoring: sudo supervisorctl start scoringengine:*"

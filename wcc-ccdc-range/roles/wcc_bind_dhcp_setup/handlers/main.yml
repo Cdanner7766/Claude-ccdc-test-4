@@ -1,0 +1,25 @@
+---
+- name: restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+
+- name: restart apache2
+  systemd:
+    name: apache2
+    state: restarted
+
+- name: restart bind9
+  systemd:
+    name: bind9
+    state: restarted
+
+- name: restart dhcp
+  systemd:
+    name: isc-dhcp-server
+    state: restarted
+
+- name: restart vsftpd
+  systemd:
+    name: vsftpd
+    state: restarted

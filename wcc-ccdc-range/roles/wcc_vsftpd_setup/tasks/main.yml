@@ -1,0 +1,86 @@
+---
+# Configure vsftpd FTP server
+
+- name: Install vsftpd
+  apt:
+    name:
+      - vsftpd
+    state: present
+
+- name: Create FTP user
+  user:
+    name: ftpuser
+    password: "{{ 'ChangeMe123!' | password_hash('sha512') }}"
+    home: /home/ftpuser
+    shell: /bin/bash
+    create_home: yes
+
+- name: Create FTP upload directory
+  file:
+    path: /home/ftpuser/ftp
+    state: directory
+    owner: ftpuser
+    group: ftpuser
+    mode: '0755'
+
+- name: Create upload directory
+  file:
+    path: /home/ftpuser/ftp/upload
+    state: directory
+    owner: ftpuser
+    group: ftpuser
+    mode: '0755'
+
+- name: Place sample files in FTP directory
+  copy:
+    content: "Welcome to WCC FTP Server\n"
+    dest: /home/ftpuser/ftp/README.txt
+    owner: ftpuser
+    group: ftpuser
+    mode: '0644'
+
+- name: Configure vsftpd (INTENTIONALLY PERMISSIVE FOR PRACTICE)
+  copy:
+    content: |
+      listen=YES
+      listen_ipv6=NO
+      anonymous_enable=NO
+      local_enable=YES
+      write_enable=YES
+      local_umask=022
+      dirmessage_enable=YES
+      use_localtime=YES
+      xferlog_enable=YES
+      connect_from_port_20=YES
+      chroot_local_user=YES
+      secure_chroot_dir=/var/run/vsftpd/empty
+      pam_service_name=vsftpd
+      rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+      rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+      ssl_enable=NO
+      pasv_enable=YES
+      pasv_min_port=10000
+      pasv_max_port=10100
+      allow_writeable_chroot=YES
+      user_sub_token=$USER
+      local_root=/home/$USER/ftp
+    dest: /etc/vsftpd.conf
+    mode: '0644'
+  notify: restart vsftpd
+
+- name: Start and enable vsftpd
+  systemd:
+    name: vsftpd
+    state: started
+    enabled: yes
+
+- name: Install and enable SSH for SFTP
+  apt:
+    name: openssh-server
+    state: present
+
+- name: Ensure SSH is running
+  systemd:
+    name: ssh
+    state: started
+    enabled: yes

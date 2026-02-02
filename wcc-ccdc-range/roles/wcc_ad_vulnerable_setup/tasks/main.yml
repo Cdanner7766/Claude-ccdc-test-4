@@ -1,0 +1,85 @@
+---
+# Set up Active Directory with common misconfigurations for CCDC practice
+# This intentionally creates vulnerable conditions for students to fix
+
+- name: Create vulnerable service account with SPN
+  win_domain_user:
+    name: svc_sql
+    password: Summer2024!
+    password_never_expires: yes
+    user_cannot_change_password: yes
+    state: present
+    attributes:
+      servicePrincipalName:
+        - MSSQLSvc/{{ ansible_hostname }}.wcc.local:1433
+
+- name: Create additional domain users
+  win_domain_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    state: present
+  loop:
+    - { name: 'jdoe', password: 'Welcome123!' }
+    - { name: 'asmith', password: 'Password1!' }
+    - { name: 'bwilliams', password: 'Spring2024!' }
+    - { name: 'ccdc_admin', password: 'ChangeMe123!' }
+
+- name: Add ccdc_admin to Domain Admins
+  win_domain_group_membership:
+    name: Domain Admins
+    members:
+      - ccdc_admin
+    state: present
+
+- name: Enable SMB v1 (vulnerability)
+  win_optional_feature:
+    name: SMB1Protocol
+    state: present
+
+- name: Disable Windows Firewall (all profiles) - Common CCDC starting condition
+  win_firewall:
+    state: disabled
+    profiles:
+      - Domain
+      - Private
+      - Public
+
+- name: Set weak password policy (students should fix this)
+  win_domain_password_policy:
+    complexity_enabled: no
+    minimum_password_length: 6
+    maximum_password_age_days: 90
+
+- name: Create GPO for weak audit policy (students should improve)
+  win_shell: |
+    New-GPO -Name "Weak Audit Policy" -Comment "Created for CCDC practice"
+  ignore_errors: yes
+
+- name: Leave Remote Desktop enabled on DC (security issue)
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    data: 0
+    type: dword
+
+- name: Create network share with weak permissions
+  win_share:
+    name: CompanyData
+    path: C:\CompanyData
+    full: Everyone
+    state: present
+
+- name: Create the actual directory
+  win_file:
+    path: C:\CompanyData
+    state: directory
+
+- name: Place "sensitive" data in share
+  win_copy:
+    content: |
+      Company Secrets
+      ===============
+      Database Password: SuperSecret123!
+      Admin Credentials: administrator / {{ ad_password | default('ChangeMe123!') }}
+      VPN Configuration: vpn.wcc.local
+    dest: C:\CompanyData\important_info.txt

@@ -1,0 +1,71 @@
+---
+# Configure Windows File Server with SMB shares
+
+- name: Install File Server role
+  win_feature:
+    name:
+      - FS-FileServer
+      - FS-Resource-Manager
+    state: present
+    include_management_tools: yes
+
+- name: Create department folders
+  win_file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - C:\Shares\HR
+    - C:\Shares\Finance
+    - C:\Shares\IT
+    - C:\Shares\Public
+
+- name: Create HR share
+  win_share:
+    name: HR
+    path: C:\Shares\HR
+    full: Domain Admins
+    change: HR_Users
+    state: present
+
+- name: Create Finance share
+  win_share:
+    name: Finance
+    path: C:\Shares\Finance
+    full: Domain Admins
+    change: Finance_Users
+    state: present
+
+- name: Create IT share
+  win_share:
+    name: IT
+    path: C:\Shares\IT
+    full: Domain Admins
+    change: IT_Users
+    state: present
+
+- name: Create Public share (vulnerability - Everyone has full control)
+  win_share:
+    name: Public
+    path: C:\Shares\Public
+    full: Everyone
+    state: present
+
+- name: Create sample files in shares
+  win_copy:
+    content: "Sample {{ item.dept }} document"
+    dest: "C:\\Shares\\{{ item.dept }}\\readme.txt"
+  loop:
+    - { dept: 'HR' }
+    - { dept: 'Finance' }
+    - { dept: 'IT' }
+    - { dept: 'Public' }
+
+- name: Enable SMB signing (security best practice students should verify)
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Services\LanmanServer\Parameters
+    name: "{{ item.name }}"
+    data: "{{ item.value }}"
+    type: dword
+  loop:
+    - { name: 'RequireSecuritySignature', value: 0 }  # Should be 1
+    - { name: 'EnableSecuritySignature', value: 1 }

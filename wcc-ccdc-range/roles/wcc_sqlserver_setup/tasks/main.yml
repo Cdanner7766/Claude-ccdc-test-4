@@ -1,0 +1,54 @@
+---
+# Microsoft SQL Server Setup
+# NOTE: This requires SQL Server installation media or Express edition
+
+- name: Download SQL Server Express (if not already present)
+  win_get_url:
+    url: https://go.microsoft.com/fwlink/?linkid=866658
+    dest: C:\temp\SQLServer2019-SSEI-Expr.exe
+  ignore_errors: yes
+
+- name: Install SQL Server Express
+  win_shell: |
+    C:\temp\SQLServer2019-SSEI-Expr.exe /ACTION=Install /FEATURES=SQL /INSTANCENAME=MSSQLSERVER /SECURITYMODE=SQL /SAPWD="ChangeMe123!" /IACCEPTSQLSERVERLICENSETERMS /QUIET
+  args:
+    creates: C:\Program Files\Microsoft SQL Server\MSSQL15.MSSQLSERVER
+  ignore_errors: yes
+  register: sql_install
+
+- name: Enable SQL Server mixed mode authentication
+  win_regedit:
+    path: HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.MSSQLSERVER\MSSQLServer
+    name: LoginMode
+    data: 2
+    type: dword
+  when: sql_install is succeeded
+
+- name: Configure SQL Server for remote connections
+  win_firewall_rule:
+    name: SQL Server
+    localport: 1433
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+  when: sql_install is succeeded
+
+- name: Start SQL Server service
+  win_service:
+    name: MSSQLSERVER
+    state: started
+    start_mode: auto
+  when: sql_install is succeeded
+  ignore_errors: yes
+
+- name: Display SQL Server info
+  debug:
+    msg:
+      - "SQL Server Express installation attempted"
+      - "Default SA password: ChangeMe123!"
+      - "Connection: {{ ansible_hostname }}\\MSSQLSERVER"
+      - "Port: 1433"
+      - ""
+      - "If installation fails, manually install SQL Server from:"
+      - "https://www.microsoft.com/en-us/sql-server/sql-server-downloads"

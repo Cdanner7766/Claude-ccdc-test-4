@@ -1,0 +1,180 @@
+# WCC CCDC Practice Competition Configuration
+# This file defines the services to be scored
+
+settings:
+  running: 1  # Set to 1 to start scoring
+  round_time_sleep: 120  # Time between scoring rounds (seconds)
+  worker_refresh_time: 30
+  
+teams:
+  - name: "WCC Blue Team"
+    subnet: "10.{{ range_id }}.10.0/24"
+    color: "blue"
+
+services:
+  # Active Directory / Domain Controller
+  - name: "Active Directory - LDAP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.2"
+    port: 389
+    type: "ldap"
+    points: 150
+    check_name: "ldap_check"
+    account:
+      username: "administrator@wcc.local"
+      password: "{{ ad_password | default('ChangeMe123!') }}"
+    
+  - name: "Active Directory - DNS"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.2"
+    port: 53
+    type: "dns"
+    points: 100
+    check_name: "dns_check"
+    query: "wcc.local"
+    expected: "10.{{ range_id }}.10.2"
+
+  # File Server
+  - name: "File Server - SMB"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.3"
+    port: 445
+    type: "smb"
+    points: 100
+    check_name: "smb_check"
+    account:
+      username: "administrator@wcc.local"
+      password: "{{ ad_password | default('ChangeMe123!') }}"
+
+  # Web Server (IIS)
+  - name: "Web Server - HTTP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.4"
+    port: 80
+    type: "http"
+    points: 150
+    check_name: "http_check"
+    url: "http://10.{{ range_id }}.10.4/"
+    expected_content: "Welcome"
+
+  - name: "Web Server - HTTPS"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.4"
+    port: 443
+    type: "https"
+    points: 150
+    check_name: "https_check"
+    url: "https://10.{{ range_id }}.10.4/"
+    expected_content: "Welcome"
+
+  # Mail Server
+  - name: "Mail Server - SMTP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.5"
+    port: 25
+    type: "smtp"
+    points: 150
+    check_name: "smtp_check"
+    expected_banner: "Microsoft ESMTP MAIL Service"
+
+  - name: "Mail Server - IMAP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.5"
+    port: 143
+    type: "imap"
+    points: 100
+    check_name: "imap_check"
+
+  - name: "Mail Server - Webmail (OWA)"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.5"
+    port: 443
+    type: "https"
+    points: 100
+    check_name: "https_check"
+    url: "https://10.{{ range_id }}.10.5/owa"
+    expected_content: "Outlook"
+
+  # Database Server
+  - name: "Database Server - SQL Server"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.6"
+    port: 1433
+    type: "mssql"
+    points: 150
+    check_name: "mssql_check"
+    account:
+      username: "sa"
+      password: "{{ db_password | default('ChangeMe123!') }}"
+
+  # DNS Server (Linux)
+  - name: "DNS Server - BIND"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.7"
+    port: 53
+    type: "dns"
+    points: 100
+    check_name: "dns_check"
+    query: "wcc.local"
+
+  - name: "DHCP Server"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.7"
+    port: 67
+    type: "dhcp"
+    points: 75
+    check_name: "dhcp_check"
+
+  # Linux Web Server (LAMP)
+  - name: "Linux Web - HTTP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.8"
+    port: 80
+    type: "http"
+    points: 100
+    check_name: "http_check"
+    url: "http://10.{{ range_id }}.10.8/"
+    expected_content: "WCC"
+
+  - name: "Linux Web - MySQL"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.8"
+    port: 3306
+    type: "mysql"
+    points: 100
+    check_name: "mysql_check"
+    account:
+      username: "root"
+      password: "{{ mysql_password | default('ChangeMe123!') }}"
+
+  # FTP Server
+  - name: "FTP Server"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.9"
+    port: 21
+    type: "ftp"
+    points: 75
+    check_name: "ftp_check"
+    account:
+      username: "ftpuser"
+      password: "{{ ftp_password | default('ChangeMe123!') }}"
+
+  - name: "FTP Server - SFTP"
+    team: "WCC Blue Team"
+    host: "10.{{ range_id }}.10.9"
+    port: 22
+    type: "ssh"
+    points: 50
+    check_name: "ssh_check"
+
+# Injects (Business tasks) - Optional for future implementation
+injects:
+  - name: "Password Policy Report"
+    description: "Submit current domain password policy"
+    time: 1800  # 30 minutes into competition
+    points: 100
+    
+  - name: "Incident Response"
+    description: "Document and report any security incidents detected"
+    time: 3600  # 60 minutes
+    points: 150

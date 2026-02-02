@@ -1,0 +1,29 @@
+---
+# Install Sysmon on Windows hosts for enhanced logging
+
+- name: Download Sysmon
+  win_get_url:
+    url: https://download.sysinternals.com/files/Sysmon.zip
+    dest: C:\temp\Sysmon.zip
+
+- name: Extract Sysmon
+  win_unzip:
+    src: C:\temp\Sysmon.zip
+    dest: C:\temp\Sysmon
+
+- name: Download SwiftOnSecurity Sysmon config
+  win_get_url:
+    url: https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml
+    dest: C:\temp\Sysmon\sysmonconfig.xml
+
+- name: Install Sysmon
+  win_shell: |
+    C:\temp\Sysmon\Sysmon64.exe -accepteula -i C:\temp\Sysmon\sysmonconfig.xml
+  args:
+    creates: C:\Windows\Sysmon64.exe
+
+- name: Ensure Sysmon service is running
+  win_service:
+    name: Sysmon64
+    state: started
+    start_mode: auto

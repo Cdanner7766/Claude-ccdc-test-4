@@ -1,0 +1,20 @@
+[group:scoringengine]
+programs=scoring-worker,scoring-web
+
+[program:scoring-worker]
+command=/opt/scoringengine/venv/bin/python /opt/scoringengine/bin/worker.py
+directory=/opt/scoringengine
+user=scoring
+autostart=false
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/log/scoringengine/worker.log
+
+[program:scoring-web]
+command=/opt/scoringengine/venv/bin/python /opt/scoringengine/bin/web.py
+directory=/opt/scoringengine
+user=scoring
+autostart=false
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/var/log/scoringengine/web.log

@@ -1,0 +1,10 @@
+---
+- name: restart supervisor
+  systemd:
+    name: supervisor
+    state: restarted
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted

@@ -1,0 +1,23 @@
+#!/bin/bash
+# WCC CCDC Scoring Engine Startup Script
+
+echo "Starting WCC CCDC Scoring Engine..."
+
+# Activate virtual environment
+source /opt/scoringengine/venv/bin/activate
+
+# Load configuration
+if [ -f /opt/scoringengine/ccdc_config.yaml ]; then
+    echo "Loading CCDC configuration..."
+    python3 /opt/scoringengine/bin/load_config.py /opt/scoringengine/ccdc_config.yaml
+fi
+
+# Start services via supervisor
+sudo supervisorctl start scoringengine:*
+
+echo "Scoring Engine started!"
+echo "Access the dashboard at: http://$(hostname -I | awk '{print $1}')"
+echo ""
+echo "To view logs:"
+echo "  Worker: tail -f /var/log/scoringengine/worker.log"
+echo "  Web:    tail -f /var/log/scoringengine/web.log"

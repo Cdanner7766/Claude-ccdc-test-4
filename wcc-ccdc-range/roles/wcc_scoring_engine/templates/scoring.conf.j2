@@ -1,0 +1,25 @@
+# Scoring Engine Configuration
+
+[database]
+type = sqlite
+path = /opt/scoringengine/scoring.db
+
+[redis]
+host = localhost
+port = 6379
+db = 0
+
+[web]
+host = 127.0.0.1
+port = 5000
+secret_key = {{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}
+
+[scoring]
+round_time = 120
+jitter = 30
+timeout = 20
+
+[admin]
+username = admin
+password = changeme
+# IMPORTANT: Change this password after first login!

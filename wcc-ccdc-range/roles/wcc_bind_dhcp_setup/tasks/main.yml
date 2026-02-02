@@ -1,0 +1,106 @@
+---
+# Configure BIND9 DNS and ISC DHCP server
+
+- name: Install BIND9
+  apt:
+    name:
+      - bind9
+      - bind9utils
+      - bind9-doc
+    state: present
+
+- name: Install ISC DHCP Server
+  apt:
+    name:
+      - isc-dhcp-server
+    state: present
+
+- name: Configure BIND9 for wcc.local zone
+  copy:
+    content: |
+      zone "wcc.local" {
+          type master;
+          file "/etc/bind/zones/db.wcc.local";
+      };
+      
+      zone "10.{{ range_id }}.10.in-addr.arpa" {
+          type master;
+          file "/etc/bind/zones/db.10.{{ range_id }}.10";
+      };
+    dest: /etc/bind/named.conf.local
+    mode: '0644'
+  notify: restart bind9
+
+- name: Create zones directory
+  file:
+    path: /etc/bind/zones
+    state: directory
+    owner: bind
+    group: bind
+    mode: '0755'
+
+- name: Create forward zone file
+  copy:
+    content: |
+      $TTL    604800
+      @       IN      SOA     dns01.wcc.local. admin.wcc.local. (
+                                    2024020201 ; Serial
+                                    604800     ; Refresh
+                                    86400      ; Retry
+                                    2419200    ; Expire
+                                    604800 )   ; Negative Cache TTL
+      ;
+      @       IN      NS      dns01.wcc.local.
+      @       IN      A       10.{{ range_id }}.10.7
+      dns01   IN      A       10.{{ range_id }}.10.7
+      dc01    IN      A       10.{{ range_id }}.10.2
+      fs01    IN      A       10.{{ range_id }}.10.3
+      web01   IN      A       10.{{ range_id }}.10.4
+      mail01  IN      A       10.{{ range_id }}.10.5
+      db01    IN      A       10.{{ range_id }}.10.6
+      lamp01  IN      A       10.{{ range_id }}.10.8
+      ftp01   IN      A       10.{{ range_id }}.10.9
+    dest: /etc/bind/zones/db.wcc.local
+    owner: bind
+    group: bind
+    mode: '0644'
+  notify: restart bind9
+
+- name: Configure DHCP server
+  copy:
+    content: |
+      option domain-name "wcc.local";
+      option domain-name-servers 10.{{ range_id }}.10.2, 10.{{ range_id }}.10.7;
+      
+      default-lease-time 600;
+      max-lease-time 7200;
+      
+      authoritative;
+      
+      subnet 10.{{ range_id }}.10.0 netmask 255.255.255.0 {
+        range 10.{{ range_id }}.10.100 10.{{ range_id }}.10.150;
+        option routers 10.{{ range_id }}.10.1;
+        option broadcast-address 10.{{ range_id }}.10.255;
+      }
+    dest: /etc/dhcp/dhcpd.conf
+    mode: '0644'
+  notify: restart dhcp
+
+- name: Configure DHCP interface
+  lineinfile:
+    path: /etc/default/isc-dhcp-server
+    regexp: '^INTERFACESv4='
+    line: 'INTERFACESv4="ens18"'
+  notify: restart dhcp
+
+- name: Start and enable BIND9
+  systemd:
+    name: bind9
+    state: started
+    enabled: yes
+
+- name: Start and enable DHCP
+  systemd:
+    name: isc-dhcp-server
+    state: started
+    enabled: yes

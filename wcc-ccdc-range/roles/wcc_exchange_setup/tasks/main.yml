@@ -1,0 +1,36 @@
+---
+# Microsoft Exchange Server Setup
+# NOTE: This is a complex installation that requires significant resources
+# This is a placeholder - full implementation requires Exchange installation media
+
+- name: Display Exchange setup information
+  debug:
+    msg:
+      - "Exchange Server setup requires manual installation"
+      - "Follow these steps:"
+      - "1. Download Exchange Server 2019 ISO"
+      - "2. Install prerequisites: .NET Framework, Visual C++ Redistributable"
+      - "3. Prepare Active Directory schema"
+      - "4. Run Exchange setup wizard"
+      - "5. Configure OWA, SMTP, IMAP services"
+      - ""
+      - "For CCDC practice, consider using:"
+      - "- Docker mail server (easier setup)"
+      - "- or skip Exchange and focus on other services"
+      - ""
+      - "Resources:"
+      - "- https://learn.microsoft.com/en-us/exchange/plan-and-deploy/deploy-new-installations/install-mailbox-role"
+
+# Placeholder tasks for prerequisites
+- name: Install .NET Framework 4.8
+  win_feature:
+    name:
+      - NET-Framework-45-Features
+      - NET-Framework-45-Core
+      - NET-Framework-45-ASPNET
+    state: present
+  when: false  # Disabled - manual setup recommended
+
+- name: Note that Exchange requires 8GB RAM minimum
+  debug:
+    msg: "Ensure MAIL01 VM has at least 8GB RAM allocated"

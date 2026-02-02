@@ -1,0 +1,110 @@
+---
+# Configure enhanced logging on Linux systems with auditd
+
+- name: Install auditd and laurel
+  apt:
+    name:
+      - auditd
+      - audispd-plugins
+      - rsyslog
+    state: present
+    update_cache: yes
+
+- name: Download and install Laurel
+  shell: |
+    cd /tmp
+    wget https://github.com/threathunters-io/laurel/releases/latest/download/laurel-amd64-musl.tar.gz
+    tar -xzf laurel-amd64-musl.tar.gz
+    cp laurel /usr/local/bin/
+    chmod +x /usr/local/bin/laurel
+  args:
+    creates: /usr/local/bin/laurel
+
+- name: Create Laurel configuration directory
+  file:
+    path: /etc/laurel
+    state: directory
+    mode: '0755'
+
+- name: Configure Laurel
+  copy:
+    content: |
+      [debug]
+      # Enable debug logging
+      # log-level = "debug"
+      
+      [output]
+      # Output directory for Laurel logs
+      directory = "/var/log/laurel"
+      
+      [auditlog]
+      # Parse auditd logs
+      statusreport-period = 600
+    dest: /etc/laurel/config.toml
+    mode: '0644'
+
+- name: Create Laurel log directory
+  file:
+    path: /var/log/laurel
+    state: directory
+    mode: '0755'
+
+- name: Configure auditd rules
+  copy:
+    content: |
+      # WCC CCDC Audit Rules
+      
+      # Delete all existing rules
+      -D
+      
+      # Buffer Size
+      -b 8192
+      
+      # Failure Mode (0=silent, 1=printk, 2=panic)
+      -f 1
+      
+      # Monitor authentication
+      -w /etc/passwd -p wa -k identity
+      -w /etc/group -p wa -k identity
+      -w /etc/shadow -p wa -k identity
+      
+      # Monitor sudo
+      -w /etc/sudoers -p wa -k sudoers
+      -w /var/log/sudo.log -p wa -k sudo_log
+      
+      # Monitor SSH
+      -w /etc/ssh/sshd_config -p wa -k sshd_config
+      
+      # Monitor system calls
+      -a always,exit -F arch=b64 -S execve -k exec
+      -a always,exit -F arch=b32 -S execve -k exec
+      
+      # Monitor network connections
+      -a always,exit -F arch=b64 -S socket -S connect -k network
+      -a always,exit -F arch=b32 -S socket -S connect -k network
+      
+      # Make configuration immutable (uncomment after testing)
+      # -e 2
+    dest: /etc/audit/rules.d/ccdc.rules
+    mode: '0640'
+
+- name: Restart auditd
+  systemd:
+    name: auditd
+    state: restarted
+    enabled: yes
+
+- name: Configure rsyslog for remote logging (optional)
+  copy:
+    content: |
+      # Send logs to scoring engine
+      # *.* @@10.{{ range_id }}.99.10:514
+    dest: /etc/rsyslog.d/50-ccdc.conf
+    mode: '0644'
+  notify: restart rsyslog
+
+- name: Ensure rsyslog is running
+  systemd:
+    name: rsyslog
+    state: started
+    enabled: yes
