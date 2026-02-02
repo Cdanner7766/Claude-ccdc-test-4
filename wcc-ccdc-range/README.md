@@ -132,6 +132,13 @@ This Ludus range provides a complete CCDC (Collegiate Cyber Defense Competition)
 - **OS**: Windows 11 Enterprise
 - **Purpose**: Domain-joined workstations for testing
 
+### Red Team Attack Box (Kali)
+- **IP**: `10.{range_id}.99.50`
+- **Network**: Management VLAN (simulates external attacker)
+- **OS**: Kali Linux
+- **Purpose**: Red team operations, penetration testing
+- **Tools**: Metasploit, Impacket, CrackMapExec, Responder, BloodHound, and more
+
 ## Prerequisites
 
 Before deploying this range, ensure you have:
@@ -148,16 +155,18 @@ Before deploying this range, ensure you have:
    debian-12-x64-server-template
    win11-22h2-x64-enterprise-template
    win2022-server-x64-template
+   kali-2023-x64-template  # For red team box
    ```
    - Follow: https://docs.ludus.cloud/docs/quick-start/build-templates
+   - **Note**: Kali template may need to be built manually if not in default templates
 
 4. **Ludus CLI**: Installed and configured locally
    - Follow: https://docs.ludus.cloud/docs/quick-start/using-cli-locally
 
 5. **Hardware Requirements**:
-   - **Minimum**: 64GB RAM, 16 CPU cores, 400GB disk
+   - **Minimum**: 68GB RAM, 18 CPU cores, 420GB disk (with Kali)
    - **Recommended**: 96GB RAM, 24 CPU cores, 500GB disk
-   - **Without Mail Server**: 48GB RAM, 12 CPU cores, 300GB disk
+   - **Without Mail Server**: 52GB RAM, 14 CPU cores, 320GB disk
 
 ## Installation
 

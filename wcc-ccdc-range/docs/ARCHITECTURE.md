@@ -17,6 +17,11 @@
                     │   │          │    │  (.99.10)    │  │
                     │   └─────┬────┘    └──────────────┘  │
                     │         │                            │
+                    │    ┌────▼──────┐                    │
+                    │    │   Kali    │                    │
+                    │    │ (.99.50)  │                    │
+                    │    │ Red Team  │                    │
+                    │    └───────────┘                    │
                     └─────────┼────────────────────────────┘
                               │
                               │ NAT/Firewall
@@ -82,7 +87,7 @@
 |--------|-----------|----------|
 | Router | 10.X.99.1 | Gateway and routing |
 | Scoring Engine | 10.X.99.10 | Service monitoring |
-| Red Team (optional) | 10.X.99.50 | Attacker machine |
+| Kali Linux | 10.X.99.50 | Red Team attacker machine |
 
 ### Business Network (VLAN 10)
 | Device | IP Address | Services | Points |

@@ -109,6 +109,7 @@ ROLES=(
     "wcc_linux_logging"
     "wcc_lamp_setup"
     "wcc_vsftpd_setup"
+    "wcc_kali_setup"
 )
 
 for role in "${ROLES[@]}"; do

