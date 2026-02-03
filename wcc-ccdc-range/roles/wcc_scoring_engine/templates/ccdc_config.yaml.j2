@@ -21,7 +21,7 @@ services:
     points: 150
     check_name: "ldap_check"
     account:
-      username: "administrator@wcc.local"
+      username: "LUDUS\\domainadmin"
       password: "{{ ad_password | default('ChangeMe123!') }}"
     
   - name: "Active Directory - DNS"
@@ -31,7 +31,7 @@ services:
     type: "dns"
     points: 100
     check_name: "dns_check"
-    query: "wcc.local"
+    query: "ludus.domain"
     expected: "10.{{ range_id }}.10.2"
 
   # File Server
@@ -43,7 +43,7 @@ services:
     points: 100
     check_name: "smb_check"
     account:
-      username: "administrator@wcc.local"
+      username: "LUDUS\\domainadmin"
       password: "{{ ad_password | default('ChangeMe123!') }}"
 
   # Web Server (IIS)
@@ -115,7 +115,7 @@ services:
     type: "dns"
     points: 100
     check_name: "dns_check"
-    query: "wcc.local"
+    query: "ludus.domain"
 
   - name: "DHCP Server"
     team: "WCC Blue Team"

@@ -33,7 +33,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: primary-dc
     roles:
       - wcc_sysmon_install
@@ -52,7 +52,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -71,7 +71,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -90,7 +90,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -109,7 +109,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -173,7 +173,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -188,7 +188,7 @@ ludus:
     windows:
       install_additional_tools: true
     domain:
-      fqdn: wcc.local
+      fqdn: ludus.domain
       role: member
     roles:
       - wcc_sysmon_install
@@ -198,7 +198,7 @@ ludus:
   # ==========================================
   - vm_name: "{{ range_id }}-kali"
     hostname: "{{ range_id }}-kali"
-    template: kali-x64-desktop-template
+    template: kali-2023-x64-template
     vlan: 99  # On management network to simulate external attacker
     ip_last_octet: 50
     ram_gb: 4

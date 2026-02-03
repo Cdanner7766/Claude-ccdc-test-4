@@ -256,24 +256,25 @@ After deployment completes:
 
 ### Default Credentials
 
-**Windows Systems (Domain)**:
-- Username: `administrator@wcc.local` or `WCC\administrator`
-- Password: `ChangeMe123!`
+⚠️ **See [CREDENTIALS.md](CREDENTIALS.md) for complete credential list**
 
-**Linux Systems**:
-- Username: `debian`
-- Password: `debian`
-- Root: `sudo su -`
+**Ludus Default Accounts (Always Work)**:
+- Windows Domain Admin: `LUDUS\domainadmin` / `password`
+- Windows Local Admin: `localuser` / `password`
+- Linux: `debian` / `debian` (has sudo)
+
+**CCDC Practice Accounts (Additional)**:
+- Service Account: `LUDUS\svc_sql` / `Summer2024!` (Kerberoastable)
+- CCDC Admin: `LUDUS\ccdc_admin` / `ChangeMe123!` (Domain Admin)
+- Test Users: `jdoe`, `asmith`, `bwilliams` (see CREDENTIALS.md)
 
 **Scoring Engine**:
 - Username: `admin`
 - Password: `changeme` (CHANGE THIS!)
 
-**Database (SQL Server)**:
-- SA Password: `ChangeMe123!`
-
-**MySQL Root**:
-- Password: `ChangeMe123!`
+**Database Servers**:
+- SQL Server SA: `ChangeMe123!`
+- MySQL Root: `ChangeMe123!`
 
 ### Accessing the Scoring Dashboard
 
@@ -484,7 +485,7 @@ Recommended 8-person team structure:
 **Solution**:
 1. Verify DC01 is running
 2. Check DNS settings on client: Should point to 10.{range_id}.10.2
-3. Test DNS: `nslookup wcc.local 10.{range_id}.10.2`
+3. Test DNS: `nslookup ludus.domain 10.{range_id}.10.2`
 4. Verify time sync (Kerberos requirement)
 5. Check domain functional level
 

@@ -110,16 +110,20 @@ ludus range power on
 | Component | IP Address | Credentials |
 |-----------|-----------|-------------|
 | Scoring Engine | 10.{range_id}.99.10 | admin / changeme |
-| DC01 (AD) | 10.{range_id}.10.2 | administrator@wcc.local / ChangeMe123! |
-| FS01 (File) | 10.{range_id}.10.3 | administrator@wcc.local / ChangeMe123! |
-| WEB01 (IIS) | 10.{range_id}.10.4 | administrator@wcc.local / ChangeMe123! |
-| MAIL01 (Exchange) | 10.{range_id}.10.5 | administrator@wcc.local / ChangeMe123! |
-| DB01 (SQL) | 10.{range_id}.10.6 | administrator@wcc.local / ChangeMe123! |
+| DC01 (AD) | 10.{range_id}.10.2 | LUDUS\domainadmin / password |
+| FS01 (File) | 10.{range_id}.10.3 | LUDUS\domainadmin / password |
+| WEB01 (IIS) | 10.{range_id}.10.4 | LUDUS\domainadmin / password |
+| MAIL01 (Exchange) | 10.{range_id}.10.5 | LUDUS\domainadmin / password |
+| DB01 (SQL) | 10.{range_id}.10.6 | LUDUS\domainadmin / password |
 | DNS01 (BIND) | 10.{range_id}.10.7 | debian / debian |
 | LAMP01 (Apache) | 10.{range_id}.10.8 | debian / debian |
 | FTP01 (vsftpd) | 10.{range_id}.10.9 | debian / debian |
-| WS01/WS02 | 10.{range_id}.10.20-21 | administrator@wcc.local / ChangeMe123! |
+| WS01/WS02 | 10.{range_id}.10.20-21 | LUDUS\domainadmin / password |
 | Kali (Red Team) | 10.{range_id}.99.50 | kali / kali |
+
+**Alternative**: Use `localuser` / `password` for local admin on any Windows machine
+
+**Complete list**: See [CREDENTIALS.md](CREDENTIALS.md) for all CCDC practice accounts
 
 ### Common Commands
 
@@ -158,7 +162,7 @@ After deployment, verify each service:
 - [ ] WS01/WS02: Can RDP and login with domain account
 
 ### Linux Services  
-- [ ] DNS01: `nslookup wcc.local 10.{range_id}.10.7` resolves
+- [ ] DNS01: `nslookup ludus.domain 10.{range_id}.10.7` resolves
 - [ ] LAMP01: Browser to http://10.{range_id}.10.8 shows webpage
 - [ ] FTP01: FTP client can connect to 10.{range_id}.10.9
 

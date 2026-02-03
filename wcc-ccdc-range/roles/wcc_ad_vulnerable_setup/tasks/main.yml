@@ -11,7 +11,7 @@
     state: present
     attributes:
       servicePrincipalName:
-        - MSSQLSvc/{{ ansible_hostname }}.wcc.local:1433
+        - MSSQLSvc/{{ ansible_hostname }}.ludus.domain:1433
 
 - name: Create additional domain users
   win_domain_user:
@@ -81,5 +81,5 @@
       ===============
       Database Password: SuperSecret123!
       Admin Credentials: administrator / {{ ad_password | default('ChangeMe123!') }}
-      VPN Configuration: vpn.wcc.local
+      VPN Configuration: vpn.ludus.domain
     dest: C:\CompanyData\important_info.txt
